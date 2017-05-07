@@ -110,46 +110,6 @@ def draw():
     draw_buffer = []
 
 
-
-def getNeighborCount(x,y):
-    count = 0
-
-    xpn = (x + 1) % livingSpaceWidth
-    ypn = (y + 1) % livingSpaceHeight
-
-    count += isAlive(x,ypn)
-    count += isAlive(xpn,ypn)
-    count += isAlive(xpn,y)
-    count += isAlive(xpn,y-1)
-    count += isAlive(x,y-1)
-    count += isAlive(x-1,y-1)
-    count += isAlive(x-1,y)
-    count += isAlive(x-1,ypn)
-
-    return count
-
-def calculateNextGeneration():
-    neighborCount = []
-    for column in range(livingSpaceWidth):
-        neighborCount.append([])
-        for row in range(livingSpaceHeight):
-            neighborCount[column].append(getNeighborCount(column,row))
-
-    for column in range(livingSpaceWidth):
-        for row in range(livingSpaceHeight):
-            if 2 <= neighborCount[column][row] <= 3:
-                if neighborCount[column][row] == 3:
-                    livingSpace[column][row] = 1000
-                if not isAlive(column,row):
-                    livingSpace[column][row] = float(livingSpace[column][row])/1.2
-
-            else:
-                livingSpace[column][row] = float(livingSpace[column][row])/1.2
-
-            if livingSpace[column][row] < 20:
-                livingSpace[column][row] = 0
-
-
 def activate(i,j):
     livingSpace[i][j] = 1000
     update_queue.append((i,j))
