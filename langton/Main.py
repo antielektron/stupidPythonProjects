@@ -255,9 +255,14 @@ def main():
         if (calc == 0):
             counter += 1
 
-        if counter > logic_frame_pause:
-            update_ant()
-            counter = 0
+        if logic_frame_pause >= 1:
+            if counter > logic_frame_pause:
+                update_ant()
+                counter = 0
+        else:
+            # multiple calculations per frame:
+            for i in range(int(1 / logic_frame_pause)):
+                update_ant()
 
 
 
