@@ -102,7 +102,7 @@ def draw():
     glVertex3f(x + offX, y, 0.0)
     glVertex3f(x + creatureW - 1, y + offY, 0.0)
     glVertex3f(x + offX, y + creatureH - 1, 0.0)
-    glVertex3f(x, y + offX - 1, 0.0)
+    glVertex3f(x, y + offY, 0.0)
 
     glEnd()
 
@@ -162,18 +162,19 @@ def move_ant():
     elif antRotation == WEST:
         dx = -1
 
-    # check bounds:
-    if antPosition[0] == 0 and dx < 0:
-        dx = 0
-    if antPosition[0] == livingSpaceWidth - 1 and dx > 0:
-        dx = 0
-    if antPosition[1] == 0 and dy < 0:
-        dy = 0
-    if antPosition[1] == livingSpaceHeight - 1 and dy > 0:
-        dy = 0
-
     # finally move:
     antPosition = (antPosition[0] + dx, antPosition[1] + dy)
+
+    # wrap around:
+    if antPosition[0] < 0:
+        antPosition = (livingSpaceWidth - 1, antPosition[1])
+    elif antPosition[0] >= livingSpaceWidth:
+        antPosition = (0, antPosition[1])
+    if antPosition[1] < 0:
+        antPosition = (antPosition[0], livingSpaceHeight - 1)
+    elif antPosition[1] >= livingSpaceHeight:
+        antPosition = (antPosition[0], 0)
+
     update_queue.append(antPosition)
 
 
