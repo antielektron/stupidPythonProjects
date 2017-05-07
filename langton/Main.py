@@ -26,15 +26,64 @@ SOUTH = 2
 WEST = 3
 
 livingSpace = []
+livingSpaceColor = []
 
 update_queue = []
 old_update_queue = []
 
+# doubled draw buffer because of display double buffering
 draw_buffer = []
 draw_buffer_old = []
 
 antPosition = (livingSpaceWidth // 2, livingSpaceHeight // 2)
 antRotation = NORTH
+
+num_colors = 2
+color_list = []
+code = [False,True]
+
+# helper function for colors:
+def HSVtoRGB(h,s,v):
+    c = v*s
+    x = c*(1-abs((h/60)% 2 -1))
+    m = v-c
+    rr=0
+    gg=0
+    bb=0
+    if(h<60):
+        rr=c
+        gg=x
+        bb=0
+    elif (h < 120):
+        rr = x
+        gg = c
+        bb = 0
+    elif (h < 180):
+        rr = 0
+        gg = c
+        bb = x
+    elif (h < 240):
+        rr=0
+        gg=x
+        bb=c
+    elif (h < 300):
+        rr = x
+        gg = 0
+        bb = c
+    elif (h < 360):
+        rr = c
+        gg = 0
+        bb = x
+
+    return(rr+m,gg+m,bb+m)
+
+def generate_colors():
+    global color_list
+    global num_colors
+    color_list = []
+    for i in range(num_colors):
+        color_list.append(HSVtoRGB(i * 360.0 / num_colors,1,1))
+
 
 def resize(shape):
     width, height = shape
@@ -53,12 +102,15 @@ def init():
 def initLivingSpace():
     for x in range(livingSpaceWidth):
         livingSpace.append([])
+        livingSpaceColor.append([])
         for y in range(livingSpaceHeight):
-            livingSpace[x].append(100)
+            livingSpace[x].append(0)
+            rgba = [float(x)/float(livingSpaceWidth), float(livingSpaceWidth-x)/float(livingSpaceWidth), float(y)/float(livingSpaceHeight),0.15]
+            livingSpaceColor[x].append(rgba)
             draw_buffer.append((x,y))
 
 def isAlive(x,y):
-    return livingSpace[x][y] > 101 # epsilon = 1
+    return livingSpace[x][y] != 0
 
 def draw():
     global draw_buffer
@@ -71,19 +123,17 @@ def draw():
     glBegin(GL_QUADS)
 
     for column,row in draw_buffer + draw_buffer_old:
-        if livingSpace[column][row] != 0:
-            health = float(float(livingSpace[column][row])/1000.0)
+        r,g,b,a = livingSpaceColor[column][row]
 
-            glColor4f(health*(float(column)/float(livingSpaceWidth)),
-                health*(float(livingSpaceWidth-column)/float(livingSpaceWidth)),
-                health*(float(row)/float(livingSpaceHeight)),1.0)
-            x = column * creatureW
-            y = row * creatureH
+        #glColor4f(255, 0, 0, 1.0)
+        glColor4f(a * r, a * g, a * b, 1.0)
+        x = column * creatureW
+        y = row * creatureH
 
-            glVertex3f(x,y,0.0)
-            glVertex3f(x + creatureW-1.0,y,0.0)
-            glVertex3f(x+creatureW-1,y+creatureH-1,0.0)
-            glVertex3f(x,y+creatureH-1,0.0)
+        glVertex3f(x,y,0.0)
+        glVertex3f(x + creatureW-1.0,y,0.0)
+        glVertex3f(x+creatureW-1,y+creatureH-1,0.0)
+        glVertex3f(x,y+creatureH-1,0.0)
 
     # draw langton's ant quad:
     x = antPosition[0] * creatureW
@@ -105,12 +155,29 @@ def draw():
     draw_buffer = []
 
 
-def activate(i,j):
-    livingSpace[i][j] = 1000
+def activate(i,j,key = 1):
+    livingSpace[i][j] = key
+    if num_colors > 2:
+        livingSpaceColor[i][j] = [
+            color_list[key - 1][0],
+            color_list[key - 1][1],
+            color_list[key - 1][2],
+            1.0
+        ]
+    else:
+        livingSpaceColor[i][j][3] = 1.0
     update_queue.append((i,j))
 
 def deactivate(i,j):
-    livingSpace[i][j] = 100
+    livingSpace[i][j] = 0
+    # correct color:
+    livingSpaceColor[i][j] = [
+        float(i) / float(livingSpaceWidth),
+        float(livingSpaceWidth - i) / float(livingSpaceWidth),
+        float(j) / float(livingSpaceHeight),
+        0.6
+    ]
+
     update_queue.append((i,j))
 
 def update_field():
@@ -121,10 +188,15 @@ def update_field():
     update_queue = []
     for i,j in old_update_queue:
         draw_buffer.append((i,j))
-        if livingSpace[i][j] > 600:
-            livingSpace[i][j] = float(livingSpace[i][j]) * 0.98
-            if livingSpace[i][j] < 600:
-                livingSpace[i][j] = 600
+        if livingSpace[i][j] <= 0 and livingSpaceColor[i][j][3] > 0.15:
+            livingSpaceColor[i][j][3] *= 0.98
+            if livingSpaceColor[i][j][3] < 0.15:
+                livingSpaceColor[i][j][3] = 0.15
+            update_queue.append((i,j))
+        elif livingSpace[i][j] > 0 and livingSpaceColor[i][j][3] > 0.6:
+            livingSpaceColor[i][j][3] *= 0.98
+            if livingSpaceColor[i][j][3] < 0.6:
+                livingSpaceColor[i][j][3] = 0.6
             update_queue.append((i,j))
 
 def move_ant(dx, dy):
@@ -151,20 +223,42 @@ def move_ant(dx, dy):
 def update_ant():
     global antPosition
     global antRotation
+    # if we have only two colors, we will switch between on and off
+    if num_colors == 2:
+        # switch cell
+        if isAlive(antPosition[0], antPosition[1]):
+            deactivate(antPosition[0], antPosition[1])
+        else:
+            activate(antPosition[0], antPosition[1])
 
-    # switch cell
-    if isAlive(antPosition[0], antPosition[1]):
-        deactivate(antPosition[0], antPosition[1])
-    else:
-        activate(antPosition[0], antPosition[1])
+        # turn
+        if isAlive(antPosition[0], antPosition[1]):
+            # turn right
+            antRotation = (antRotation + 1) % 4
+        else:
+            # turn left
+            antRotation = (antRotation + 3) % 4
 
-    # turn
-    if isAlive(antPosition[0], antPosition[1]):
-        # turn right
-        antRotation = (antRotation + 1) % 4
     else:
-        # turn left
-        antRotation = (antRotation + 3) % 4
+        # if we have more than 3 colors, we use the color code
+        old_key = livingSpace[antPosition[0]][antPosition[1]] - 1
+        new_key = (livingSpace[antPosition[0]][antPosition[1]]) % num_colors + 1  # avoiding key zero, it is deactivated
+        if not isAlive(antPosition[0], antPosition[1]):
+            # first activation time, increase key:
+            new_key += 1
+            old_key += 1
+
+        #determine direction:
+        if code[old_key]:
+            # turn left:
+            antRotation = (antRotation + 3) % 4
+        else:
+            # turn right:
+            antRotation = (antRotation + 1) % 4
+
+        # then activate with new key
+        activate(antPosition[0], antPosition[1], new_key)
+
 
     # move on step:
     dx = 0
@@ -190,6 +284,9 @@ def main():
     global antPosition
     global window_w
     global window_h
+    global color_list
+    global num_colors
+    global code
 
     # parsing args:
     parser = argparse.ArgumentParser(description="langton's ant")
@@ -202,6 +299,7 @@ def main():
     parser.add_argument('--window_w', dest='win_w', default=window_w, help='window width')
     parser.add_argument('--window_h', dest='win_h', default=window_h, help='window height')
     parser.add_argument('--configurator', dest='configurator', action='store_true', help='start in field edit mode')
+    parser.add_argument('--code', dest='code', default='01', help='binary code for the ant')
 
     parser.set_defaults(fullscreen=False)
     parser.set_defaults(configurator=False)
@@ -213,6 +311,19 @@ def main():
     calc = int(args.calc)
 
     video_flags = OPENGL | HWSURFACE | DOUBLEBUF
+
+    # parse code:
+    code = []
+    for c in args.code:
+        if c == '0':
+            code.append(False)
+        else:
+            code.append(True)
+
+    # generate colors:
+    num_colors = len(code)
+    generate_colors()
+
 
     if args.fullscreen:
         video_flags = OPENGL | HWSURFACE | DOUBLEBUF | FULLSCREEN
@@ -249,6 +360,8 @@ def main():
     logic_frame_pause = FPS / steps_per_sec
     configurator_mode = bool(args.configurator)
 
+    field_draws = 0
+
     if (calc > 0):
         for i in range(calc):
             update_ant();
@@ -266,6 +379,14 @@ def main():
         update_field();
         draw()
 
+        field_draws += len(draw_buffer) + len(draw_buffer_old)
+        frames += 1
+
+        if frames % FPS == 0:
+            print("average field draws per frame: " + str(field_draws/FPS))
+            field_draws = 0
+
+
         pygame.display.flip()
 
         if configurator_mode:
@@ -281,10 +402,12 @@ def main():
                 elif event.key == K_RIGHT:
                     move_ant(+1,0)
                 elif event.key == K_SPACE:
-                    if isAlive(antPosition[0], antPosition[1]):
-                        deactivate(antPosition[0], antPosition[1])
-                    else:
-                        activate(antPosition[0], antPosition[1])
+                    new_key = (livingSpace[antPosition[0]][antPosition[1]]) % num_colors + 1
+                    if not isAlive(antPosition[0], antPosition[1]):
+                        new_key += 1
+                    activate(antPosition[0], antPosition[1], new_key)
+                elif event.key == K_BACKSPACE:
+                    deactivate(antPosition[0],antPosition[1])
                 elif event.key == K_RETURN:
                     configurator_mode = False
 
