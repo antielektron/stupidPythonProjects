@@ -199,12 +199,15 @@ def main():
     parser.add_argument('--w', dest='w', default = livingSpaceWidth, help = 'field width')
     parser.add_argument('--h', dest='h', default=livingSpaceHeight, help = 'field height')
     parser.add_argument('--calc', dest='calc', default=0, help='calculate steps and only display result')
+    parser.add_argument('--default', dest='default', default=0, help='setting all fields to this value')
 
     args = parser.parse_args()
     steps_per_sec = int(args.steps)
     livingSpaceWidth = int(args.w)
     livingSpaceHeight = int(args.h)
     calc = int(args.calc)
+
+
 
     creatureW = window_w / (livingSpaceWidth)
     creatureH = window_h / (livingSpaceHeight)
@@ -215,6 +218,12 @@ def main():
     pygame.display.set_mode((window_w,window_h),video_flags)
 
     initLivingSpace()
+
+    if int(args.default) != 0:
+        for i in range(livingSpaceWidth):
+            for j in range(livingSpaceHeight):
+                activate(i,j)
+
     resize((window_w, window_h))
     init()
 
