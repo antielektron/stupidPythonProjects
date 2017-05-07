@@ -1,18 +1,13 @@
 #!/usr/bin/env python3
 import pygame
-import random
-import sys
 from OpenGL.GL import *
-from OpenGL.GLU import *
 from pygame.locals import *
 
 import argparse
 
-video_flags = OPENGL | HWSURFACE | DOUBLEBUF
+#TODO: remove global vars
 
 pygame.init()
-
-dinfo = pygame.display.Info();
 
 window_w = 1600
 window_h = 900
@@ -132,7 +127,28 @@ def update_field():
                 livingSpace[i][j] = 600
             update_queue.append((i,j))
 
-def move_ant():
+def move_ant(dx, dy):
+    global antPosition
+    global antRotation
+
+    # finally move:
+    antPosition = (antPosition[0] + dx, antPosition[1] + dy)
+
+    # wrap around:
+    if antPosition[0] < 0:
+        antPosition = (livingSpaceWidth - 1, antPosition[1])
+    elif antPosition[0] >= livingSpaceWidth:
+        antPosition = (0, antPosition[1])
+    if antPosition[1] < 0:
+        antPosition = (antPosition[0], livingSpaceHeight - 1)
+    elif antPosition[1] >= livingSpaceHeight:
+        antPosition = (antPosition[0], 0)
+
+    update_queue.append(antPosition)
+
+
+
+def update_ant():
     global antPosition
     global antRotation
 
@@ -162,28 +178,7 @@ def move_ant():
     elif antRotation == WEST:
         dx = -1
 
-    # finally move:
-    antPosition = (antPosition[0] + dx, antPosition[1] + dy)
-
-    # wrap around:
-    if antPosition[0] < 0:
-        antPosition = (livingSpaceWidth - 1, antPosition[1])
-    elif antPosition[0] >= livingSpaceWidth:
-        antPosition = (0, antPosition[1])
-    if antPosition[1] < 0:
-        antPosition = (antPosition[0], livingSpaceHeight - 1)
-    elif antPosition[1] >= livingSpaceHeight:
-        antPosition = (antPosition[0], 0)
-
-    update_queue.append(antPosition)
-
-
-
-def update_ant():
-    global antPosition
-    global antRotation
-
-    move_ant()
+    move_ant(dx,dy)
 
 
 def main():
@@ -193,6 +188,8 @@ def main():
     global creatureW
     global creatureH
     global antPosition
+    global window_w
+    global window_h
 
     # parsing args:
     parser = argparse.ArgumentParser(description="langton's ant")
@@ -201,6 +198,13 @@ def main():
     parser.add_argument('--h', dest='h', default=livingSpaceHeight, help = 'field height')
     parser.add_argument('--calc', dest='calc', default=0, help='calculate steps and only display result')
     parser.add_argument('--default', dest='default', default=0, help='setting all fields to this value')
+    parser.add_argument('--fullscreen', dest='fullscreen', action='store_true')
+    parser.add_argument('--window_w', dest='win_w', default=window_w, help='window width')
+    parser.add_argument('--window_h', dest='win_h', default=window_h, help='window height')
+    parser.add_argument('--configurator', dest='configurator', action='store_true')
+
+    parser.set_defaults(fullscreen=False)
+    parser.set_defaults(configurator=False)
 
     args = parser.parse_args()
     steps_per_sec = int(args.steps)
@@ -208,6 +212,16 @@ def main():
     livingSpaceHeight = int(args.h)
     calc = int(args.calc)
 
+    video_flags = OPENGL | HWSURFACE | DOUBLEBUF
+
+    if args.fullscreen:
+        video_flags = OPENGL | HWSURFACE | DOUBLEBUF | FULLSCREEN
+        dinfo = pygame.display.Info();
+        window_w = dinfo.current_w
+        window_h = dinfo.current_h
+    else:
+        window_w = int(args.win_w)
+        window_h = int(args.win_h)
 
 
     creatureW = window_w / (livingSpaceWidth)
@@ -233,6 +247,7 @@ def main():
     frames = 0
     counter = 0
     logic_frame_pause = FPS / steps_per_sec
+    configurator_mode = bool(args.configurator)
 
     if (calc > 0):
         for i in range(calc):
@@ -253,18 +268,43 @@ def main():
 
         pygame.display.flip()
 
-        if (calc == 0):
-            counter += 1
+        if configurator_mode:
+            # move with keys:
+            if event.type == KEYDOWN:
+                draw_buffer.append((antPosition[0],antPosition[1]))
+                if event.key == K_DOWN:
+                    move_ant(0,+1)
+                elif event.key == K_UP:
+                    move_ant(0,-1)
+                elif event.key == K_LEFT:
+                    move_ant(-1,0)
+                elif event.key == K_RIGHT:
+                    move_ant(+1,0)
+                elif event.key == K_SPACE:
+                    if isAlive(antPosition[0], antPosition[1]):
+                        deactivate(antPosition[0], antPosition[1])
+                    else:
+                        activate(antPosition[0], antPosition[1])
+                elif event.key == K_RETURN:
+                    configurator_mode = False
 
-        if logic_frame_pause >= 1:
-            if counter > logic_frame_pause:
-                update_ant()
-                counter = 0
         else:
-            # multiple calculations per frame:
-            for i in range(int(1 / logic_frame_pause)):
-                update_ant()
 
+            if (calc == 0):
+                counter += 1
+
+            if logic_frame_pause >= 1:
+                if counter > logic_frame_pause:
+                    update_ant()
+                    counter = 0
+            else:
+                # multiple calculations per frame:
+                for i in range(int(1 / logic_frame_pause)):
+                    update_ant()
+
+            # switch to configurator mode:
+            if event.type == KEYDOWN and event.key == K_RETURN:
+                configurator_mode = True
 
 
 if __name__ == '__main__':
