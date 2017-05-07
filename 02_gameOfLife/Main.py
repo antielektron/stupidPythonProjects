@@ -21,7 +21,8 @@ FPS = 40
 
 livingSpace = []
 
-def resize((width, height)):
+def resize(shape):
+    width, height = shape
     if height == 0:
         height = 1
     glViewport(0, 0, width, height)
