@@ -201,7 +201,7 @@ def main():
     parser.add_argument('--fullscreen', dest='fullscreen', action='store_true')
     parser.add_argument('--window_w', dest='win_w', default=window_w, help='window width')
     parser.add_argument('--window_h', dest='win_h', default=window_h, help='window height')
-    parser.add_argument('--configurator', dest='configurator', action='store_true')
+    parser.add_argument('--configurator', dest='configurator', action='store_true', help='start in field edit mode')
 
     parser.set_defaults(fullscreen=False)
     parser.set_defaults(configurator=False)
@@ -216,7 +216,7 @@ def main():
 
     if args.fullscreen:
         video_flags = OPENGL | HWSURFACE | DOUBLEBUF | FULLSCREEN
-        dinfo = pygame.display.Info();
+        dinfo = pygame.display.Info()
         window_w = dinfo.current_w
         window_h = dinfo.current_h
     else:
