@@ -299,7 +299,7 @@ def main():
     parser.add_argument('--window_w', dest='win_w', default=window_w, help='window width')
     parser.add_argument('--window_h', dest='win_h', default=window_h, help='window height')
     parser.add_argument('--configurator', dest='configurator', action='store_true', help='start in field edit mode')
-    parser.add_argument('--code', dest='code', default='01', help='binary code for the ant')
+    parser.add_argument('--code', dest='code', default='01', help='binary code for the ant (\'01\' corresponds to the starndard ant behaviour)')
 
     parser.set_defaults(fullscreen=False)
     parser.set_defaults(configurator=False)
