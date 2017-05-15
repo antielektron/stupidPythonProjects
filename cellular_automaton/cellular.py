@@ -32,10 +32,13 @@ def code2FunctionTable(code, r):
     c = code
 
     if r == 1:
-        e = 8
-        for i in range(2):
-            for j in range(2):
-                for k in range(2):
+        e = 7
+
+        # for each bit, loop over {1,0}
+
+        for i in range(1,-1, -1):
+            for j in range(1,-1, -1):
+                for k in range(1,-1, -1):
                     if 2**e > c:
                         result[(i,j,k)] = 0
                     else:
@@ -43,13 +46,13 @@ def code2FunctionTable(code, r):
                         c -= 2 ** e
                     e -= 1
     elif r == 2:
-        e = 32
-        for i in range(2):
-            for j in range(2):
-                for k in range(2):
-                    for l in range(2):
-                        for m in range(2):
-                            if 2 ** e > c:
+        e = 31
+        for i in range(1,-1, -1):
+            for j in range(1,-1, -1):
+                for k in range(1,-1, -1):
+                    for l in range(1,-1, -1):
+                        for m in range(1,-1, -1):
+                            if 2**e > c:
                                 result[(i, j, k, l, m)] = 0
                             else:
                                 result[(i, j, k, l, m)] = 1
