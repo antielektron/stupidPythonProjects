@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
+
 import pygame
 from OpenGL.GL import *
 from pygame.locals import *
 
 import argparse
+import sys
+import random
+import time
 
 #TODO: remove global vars
 
@@ -41,6 +45,9 @@ antRotation = NORTH
 num_colors = 2
 color_list = []
 code = [False,True]
+
+# store number of active cells
+num_active_cells = 0
 
 # helper function for colors:
 def HSVtoRGB(h,s,v):
@@ -144,10 +151,10 @@ def draw():
 
     glColor4f(1,1,1,0.5)
 
-    glVertex3f(x + offX, y, 0.0)
-    glVertex3f(x + creatureW - 1, y + offY, 0.0)
-    glVertex3f(x + offX, y + creatureH - 1, 0.0)
-    glVertex3f(x, y + offY, 0.0)
+    glVertex3f(x + offX, y, 0.0) if antRotation != SOUTH else glVertex3f(x + offX, y + creatureH/2, 0.0)
+    glVertex3f(x + creatureW - 1, y + offY, 0.0) if antRotation != WEST else glVertex3f(x + creatureW/2, y + offY, 0.0)
+    glVertex3f(x + offX, y + creatureH - 1, 0.0) if antRotation != NORTH else glVertex3f(x + offX, y + creatureH/2, 0.0)
+    glVertex3f(x, y + offY, 0.0) if antRotation != EAST else glVertex3f(x + creatureW/2, y + offY, 0.0)
 
     glEnd()
 
@@ -156,6 +163,10 @@ def draw():
 
 
 def activate(i,j,key = 1):
+    global num_active_cells
+    if livingSpace[i][j] == 0:
+        num_active_cells += 1
+
     livingSpace[i][j] = key
     if num_colors > 2:
         livingSpaceColor[i][j] = [
@@ -169,6 +180,9 @@ def activate(i,j,key = 1):
     update_queue.append((i,j))
 
 def deactivate(i,j):
+    global num_active_cells
+    if livingSpace[i][j] != 0:
+        num_active_cells -= 1
     livingSpace[i][j] = 0
     # correct color:
     livingSpaceColor[i][j] = [
@@ -282,6 +296,7 @@ def main():
     global creatureW
     global creatureH
     global antPosition
+    global antRotation
     global window_w
     global window_h
     global color_list
@@ -289,17 +304,25 @@ def main():
     global code
 
     # parsing args:
-    parser = argparse.ArgumentParser(description="langton's ant")
+    parser = argparse.ArgumentParser(description="langton's ant simulation tool", formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('--steps', dest='steps', default = 20 , help='steps per second')
     parser.add_argument('--w', dest='w', default = livingSpaceWidth, help = 'field width')
     parser.add_argument('--h', dest='h', default=livingSpaceHeight, help = 'field height')
     parser.add_argument('--calc', dest='calc', default=0, help='calculate steps and only display result')
-    parser.add_argument('--default', dest='default', default=0, help='setting all fields to this value')
     parser.add_argument('--fullscreen', dest='fullscreen', action='store_true')
     parser.add_argument('--window_w', dest='win_w', default=window_w, help='window width')
     parser.add_argument('--window_h', dest='win_h', default=window_h, help='window height')
     parser.add_argument('--configurator', dest='configurator', action='store_true', help='start in field edit mode')
     parser.add_argument('--code', dest='code', default='01', help='binary code for the ant (\'01\' corresponds to the starndard ant behaviour)')
+    parser.add_argument('--file', dest='file', default='', help='writing number of living cells per step in this file')
+    parser.add_argument('--pattern', dest='pattern', default='0',
+                        help='initial pattern for the field. Possible values:\n' +
+                        '\t * 0: all fields inactive\n' +
+                        '\t * 1: all fields active\n' +
+                        '\t * check: checkboard pattern\n' +
+                        '\t * horizontal: horizontal stripes\n' +
+                        '\t * vertical: vertical stripes\n' +
+                        '\t * random: random values\n')
 
     parser.set_defaults(fullscreen=False)
     parser.set_defaults(configurator=False)
@@ -309,6 +332,10 @@ def main():
     livingSpaceWidth = int(args.w)
     livingSpaceHeight = int(args.h)
     calc = int(args.calc)
+    filename = args.file
+    fileobj = None
+    if len(filename) > 0:
+        fileobj = open(filename, mode='w')
 
     video_flags = OPENGL | HWSURFACE | DOUBLEBUF
 
@@ -345,11 +372,6 @@ def main():
 
     initLivingSpace()
 
-    if int(args.default) != 0:
-        for i in range(livingSpaceWidth):
-            for j in range(livingSpaceHeight):
-                activate(i,j)
-
     resize((window_w, window_h))
     init()
 
@@ -362,9 +384,52 @@ def main():
 
     field_draws = 0
 
+    # apply pattern
+    if args.pattern == '0':
+        # nothing to do
+        pass
+    elif args.pattern == '1':
+        for i in range(livingSpaceWidth):
+            for j in range(livingSpaceHeight):
+                activate(i,j)
+    elif args.pattern == 'check':
+        for i in range(livingSpaceWidth):
+            for j in range(livingSpaceHeight):
+                if (i + j) % 2 == 0:
+                    activate(i,j)
+    elif args.pattern == 'horizontal':
+        for i in range(livingSpaceWidth):
+            for j in range(livingSpaceHeight):
+                m = j % num_colors
+                if num_colors > 2:
+                    m += 1
+                if m != 0:
+                    activate(i,j,m)
+    elif args.pattern == 'vertical':
+        for i in range(livingSpaceWidth):
+            for j in range(livingSpaceHeight):
+                m = i % num_colors
+                if num_colors > 2:
+                    m += 1
+                if m != 0:
+                    activate(i,j,m)
+    elif args.pattern == 'random':
+        r = random.Random(time.time())
+        for i in range(livingSpaceWidth):
+            for j in range(livingSpaceHeight):
+                k = r.randint(0,num_colors - 1)
+                if num_colors > 2:
+                    k += 1
+                if k != 0:
+                    activate(i,j,k)
+    else:
+        print("error. unknown pattern")
+        parser.print_help()
+        sys.exit(-1)
+
     if (calc > 0):
         for i in range(calc):
-            update_ant();
+            update_ant()
 
     #main loop:
     while True:
@@ -376,7 +441,7 @@ def main():
         if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
             break
 
-        update_field();
+        update_field()
         draw()
 
         field_draws += len(draw_buffer) + len(draw_buffer_old)
@@ -408,6 +473,12 @@ def main():
                     activate(antPosition[0], antPosition[1], new_key)
                 elif event.key == K_BACKSPACE:
                     deactivate(antPosition[0],antPosition[1])
+                elif event.key == K_LCTRL:
+                    antRotation = (antRotation - 1) % 4
+                    move_ant(0,0)
+                elif event.key == K_RCTRL:
+                    antRotation = (antRotation + 1) % 4
+                    move_ant(0,0)
                 elif event.key == K_RETURN:
                     configurator_mode = False
 
@@ -419,15 +490,21 @@ def main():
             if logic_frame_pause >= 1:
                 if counter > logic_frame_pause:
                     update_ant()
+                    if fileobj != None:
+                        fileobj.write(str(num_active_cells) + '\n')
                     counter = 0
             else:
                 # multiple calculations per frame:
                 for i in range(int(1 / logic_frame_pause)):
                     update_ant()
+                    if fileobj != None:
+                        fileobj.write(str(num_active_cells) + '\n')
 
             # switch to configurator mode:
             if event.type == KEYDOWN and event.key == K_RETURN:
                 configurator_mode = True
+    if fileobj != None:
+        fileobj.close()
 
 
 if __name__ == '__main__':
