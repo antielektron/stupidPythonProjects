@@ -142,7 +142,7 @@ def draw():
         glVertex3f(x + creatureW-1.0,y,0.0)
         glVertex3f(x+creatureW-1,y+creatureH-1,0.0)
         glVertex3f(x,y+creatureH-1,0.0)
-
+    glEnd()
 
     draw_buffer_old = draw_buffer
     draw_buffer = []
