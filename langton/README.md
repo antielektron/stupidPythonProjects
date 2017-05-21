@@ -1,9 +1,22 @@
 # Langton's Ant Simulator
 
+## install dependencies:
+
+this python program needs pygame and PyOpenGL for the displaying stuff.
+
+this can be done via pip (on ubuntu-linux pip3 for using python 3):
+
+```
+pip install PyOpenGL PyOpenGL_accelerate pygame
+```
+
+##  run the program:
+
 ```
 usage: Main.py [-h] [--steps STEPS] [--w W] [--h H] [--calc CALC]
                [--fullscreen] [--window_w WIN_W] [--window_h WIN_H]
-               [--configurator] [--code CODE] [--pattern PATTERN]
+               [--configurator] [--code CODE] [--file FILE]
+               [--pattern PATTERN]
 
 langton's ant simulation tool
 
@@ -17,7 +30,8 @@ optional arguments:
   --window_w WIN_W   window width
   --window_h WIN_H   window height
   --configurator     start in field edit mode
-  --code CODE        binary code for the ant ('01' corresponds to the starndard ant behaviour)
+  --code CODE        binary code for the ant ('10' corresponds to the starndard ant behaviour). 1 means 'turn left', 0 means 'turn right'
+  --file FILE        writing number of living cells per step in this file
   --pattern PATTERN  initial pattern for the field. Possible values:
                      	 * 0: all fields inactive
                      	 * 1: all fields active
@@ -25,7 +39,6 @@ optional arguments:
                      	 * horizontal: horizontal stripes
                      	 * vertical: vertical stripes
                      	 * random: random values
-
 ```
 
 keys:
@@ -39,3 +52,30 @@ keys:
 | ctrl left / ctrl right | rotate ant (in configuration mode)       |
 | escape                 | exit program                             |
 
+## examples
+
+*   run standard langton's ant and write number of living cells per timestep to 'out.txt':
+
+    ```
+    ./Main.py --file out.txt 
+    ```
+
+*   run standard langton's and with checkboard pattern:
+
+    ```
+    ./Main.py --pattern check
+    ```
+
+*   run on a fieldsize of 16x9 and start in configuration mode to adjust the ant's position and rotation:
+
+    ```
+    ./Main.py --w 16 --h 9 --configurator
+    ```
+
+*   run the multicolored ant 'RRLLLRLLLRRR' on a field with size 320x180 and perform 1000 steps per second:
+
+    ```
+    ./Main.py --w 320 --h 180 --code 110001000111 --steps 1000
+    ```
+
+    ​

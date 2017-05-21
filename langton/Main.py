@@ -22,7 +22,7 @@ livingSpaceHeight = 36
 creatureW = window_w/(livingSpaceWidth)
 creatureH = window_h/(livingSpaceHeight)
 
-FPS = 60
+FPS = 30
 
 NORTH = 0
 EAST = 1
@@ -246,12 +246,14 @@ def update_ant():
             activate(antPosition[0], antPosition[1])
 
         # turn
-        if isAlive(antPosition[0], antPosition[1]):
+        code_index = 1 if isAlive(antPosition[0], antPosition[1]) else 0
+
+        if code[code_index]:
             # turn right
-            antRotation = (antRotation + 1) % 4
+            antRotation = (antRotation + 3) % 4
         else:
             # turn left
-            antRotation = (antRotation + 3) % 4
+            antRotation = (antRotation + 1) % 4
 
     else:
         # if we have more than 3 colors, we use the color code
@@ -304,7 +306,7 @@ def main():
     global code
 
     # parsing args:
-    parser = argparse.ArgumentParser(description="langton's ant simulation tool", formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(description="langton\'s ant simulation tool", formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('--steps', dest='steps', default = 20 , help='steps per second')
     parser.add_argument('--w', dest='w', default = livingSpaceWidth, help = 'field width')
     parser.add_argument('--h', dest='h', default=livingSpaceHeight, help = 'field height')
@@ -313,7 +315,7 @@ def main():
     parser.add_argument('--window_w', dest='win_w', default=window_w, help='window width')
     parser.add_argument('--window_h', dest='win_h', default=window_h, help='window height')
     parser.add_argument('--configurator', dest='configurator', action='store_true', help='start in field edit mode')
-    parser.add_argument('--code', dest='code', default='01', help='binary code for the ant (\'01\' corresponds to the starndard ant behaviour)')
+    parser.add_argument('--code', dest='code', default='10', help='binary code for the ant (\'10\' corresponds to the starndard ant behaviour). 1 means \'turn left\', 0 means \'turn right\'')
     parser.add_argument('--file', dest='file', default='', help='writing number of living cells per step in this file')
     parser.add_argument('--pattern', dest='pattern', default='0',
                         help='initial pattern for the field. Possible values:\n' +
