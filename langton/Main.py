@@ -307,7 +307,7 @@ def main():
 
     # parsing args:
     parser = argparse.ArgumentParser(description="langton\'s ant simulation tool", formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('--steps', dest='steps', default = 20 , help='steps per second')
+    parser.add_argument('--steps', dest='steps', default = 20 , help='steps per second. Default = 20')
     parser.add_argument('--w', dest='w', default = livingSpaceWidth, help = 'field width')
     parser.add_argument('--h', dest='h', default=livingSpaceHeight, help = 'field height')
     parser.add_argument('--calc', dest='calc', default=0, help='calculate steps and only display result')
@@ -328,6 +328,50 @@ def main():
 
     parser.set_defaults(fullscreen=False)
     parser.set_defaults(configurator=False)
+
+    if (len(sys.argv) == 1):
+
+        # no parameters given. Print help and ask user at runtime for options:
+
+        settings = {}
+        settings["steps"] = 20
+        settings["w"] = livingSpaceWidth
+        settings["h"] = livingSpaceHeight
+        settings["calc"] = False
+        settings["fullscreen"] = False
+        settings["window_w"] = window_w
+        settings["window_h"] = window_h
+        settings["configurator"] = False
+        settings["code"] = '10'
+        settings["file"] = ""
+        settings["pattern"] = '0'
+
+        while True:
+            parser.print_help()
+            print("current settings:")
+            for key in settings.keys():
+                print(str(key) + " = " + str(settings[key]))
+            a = input("enter parameter to change. press enter to continue:")
+            if len(a) == 0:
+                break
+            val = input("enter new value:")
+            settings[a] = val
+        # passing settings to parser:
+        parser.set_defaults(steps=settings["steps"])
+        parser.set_defaults(w=settings["w"])
+        parser.set_defaults(h=settings["h"])
+        parser.set_defaults(calc=settings["calc"])
+        parser.set_defaults(fullscreen=settings["fullscreen"])
+        parser.set_defaults(window_w=settings["window_w"])
+        parser.set_defaults(window_h=settings["window_h"])
+        parser.set_defaults(configurator=settings["configurator"])
+        parser.set_defaults(code=settings["code"])
+        if len(settings["file"]) > 0:
+            parser.set_defaults(file=settings["file"])
+        parser.set_defaults(pattern=settings["pattern"])
+
+
+
 
     args = parser.parse_args()
     steps_per_sec = int(args.steps)

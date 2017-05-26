@@ -41,6 +41,8 @@ optional arguments:
                      	 * random: random values
 ```
 
+*   if no arguments are given, the program will ask the user at the runtime for the requested arguments.
+
 keys:
 
 | key                    | function                                 |
