@@ -337,7 +337,7 @@ def main():
         settings["steps"] = 20
         settings["w"] = livingSpaceWidth
         settings["h"] = livingSpaceHeight
-        settings["calc"] = False
+        settings["calc"] = 0
         settings["fullscreen"] = False
         settings["window_w"] = window_w
         settings["window_h"] = window_h

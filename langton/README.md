@@ -43,7 +43,7 @@ optional arguments:
 
 *   if no arguments are given, the program will ask the user at the runtime for the requested arguments.
 
-keys:
+## keys
 
 | key                    | function                                 |
 | ---------------------- | ---------------------------------------- |
@@ -53,6 +53,18 @@ keys:
 | backspace              | deactivate field (in configuration mode) |
 | ctrl left / ctrl right | rotate ant (in configuration mode)       |
 | escape                 | exit program                             |
+
+## patterns:
+
+| pattern name | with standard ant    | with multicolor ant  |
+| ------------ | -------------------- | -------------------- |
+| 0            | ![](doc/p0a.png)     | ![](doc/p0a.png)     |
+| 1            | ![](doc/p1a.png)     | ![](doc/p1b.png)     |
+| check        | ![](doc/pchecka.png) | ![](doc/pcheckb.png) |
+| horizontal   | ![](doc/pha.png)     | ![](doc/phb.png)     |
+| vertical     | ![](doc/pva.png)     | ![](doc/pvb.png)     |
+
+
 
 ## examples
 
@@ -80,4 +92,11 @@ keys:
     ./Main.py --w 320 --h 180 --code 110001000111 --steps 1000
     ```
 
+*   run the multicolored ant 'RRLLLRLLLRRR' on a field with size 320x180 and calculate the result after 10.000 steps
+
+    ```
+    ./Main.py --w 320 --h 180 --code 110001000111 --calc 10000
+    ```
+
     ​
+
