@@ -98,5 +98,7 @@ optional arguments:
     ./Main.py --w 320 --h 180 --code 110001000111 --calc 10000
     ```
 
-    ​
+    *   result:
+
+        ![](doc/example.png)
 
