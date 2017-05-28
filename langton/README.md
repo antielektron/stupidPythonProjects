@@ -95,7 +95,7 @@ optional arguments:
 *   run the multicolored ant 'RRLLLRLLLRRR' on a field with size 320x180 and calculate the result after 10.000 steps
 
     ```
-    ./Main.py --w 320 --h 180 --code 110001000111 --calc 10000
+    ./Main.py --w 320 --h 180 --code 110001000111 --calc 100000
     ```
 
     *   result:
