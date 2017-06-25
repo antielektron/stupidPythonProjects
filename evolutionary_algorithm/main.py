@@ -51,13 +51,22 @@ def parsingArguments():
 
 # easy adjustable functions for the ea-cycle. Will be packed in lambda objects in main()
 def inheritance(parents):
+    '''
+
+    :param parents: list of Individuals. Their genome can be accessed by parents[i].genome
+    :return: genome for new offspring individual
+    '''
 
     # just copy genome from first parent:
     return parents[0].genome
 
 def mutation(genome, e):
+    '''
 
-
+    :param genome: list of length L of real values: the genome to mutate
+    :param e: epsilon value (for random range)
+    :return: the mutated genome
+    '''
 
     # mutate new genome by equally distributed random value in range [-e:e]
     newGenome = []
@@ -68,12 +77,21 @@ def mutation(genome, e):
     return newGenome
 
 def externalSelection(fitness):
+    '''
 
+    :param fitness: list with fitness values
+    :return: list of indices of surviving individuals
+    '''
     # only keep the fittest
     return [np.argmax(fitness)]
 
 def parentSelection(population, fitness):
-
+    '''
+    parent selection method for one individual
+    :param population: list of individuals which survived external selection
+    :param fitness: list of fitness values for given population
+    :return: list of parents for one new offspring individual
+    '''
 
     # only first (and only individual so far) is parent
     return [0]

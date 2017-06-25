@@ -55,7 +55,7 @@ class EvolutionaryPopulation(object):
                  externalSelectionFunction=lambda fitness: list(range(len(fitness))),                   # keep whole population
                  parentSelectionFunction=lambda population, fitness: list(range(len(population)))       # all individuals are parents
                  ):
-        self.L = 3
+        self.L = L
         self.fitnessFunction = fitnessFunction
         self.inheritanceFunction = inheritanceFunction
         self.mutationFunction = mutationFunction
@@ -97,6 +97,7 @@ class EvolutionaryPopulation(object):
             newIndividual = Individual(self.fitnessFunction, self.mutationFunction, self.inheritanceFunction, parents)
             newIndividual.mutate()
             self.population.append(newIndividual)
+            # update fitness:
             self.fitness.append(newIndividual.evaluateFitness())
 
     def printPopulation(self):
